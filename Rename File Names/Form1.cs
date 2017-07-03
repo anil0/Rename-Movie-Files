@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Web;
 using Newtonsoft.Json;
@@ -35,30 +37,61 @@ namespace Rename_File_Names
             foreach (var file in fileInfo)
             {
                 var fileSplit = file.FullName.Split('.');
+                var fileSplitByName = file.Name.Split('.');
+
+                var constructedNameFromParts = "";
+
+                foreach (var s in fileSplitByName)
+                {
+                    //if year then stop and grab only name
+
+                    if (Regex.IsMatch(s, "^(19|20)[0-9][0-9]"))
+                    {
+                        break;
+                    }
+
+                    constructedNameFromParts += s + " ";          
+                }
+
+                //Console.WriteLine("final name: " + constructedNameFromParts.Trim());
+
                 if (fileSplit[1].Equals("mp4") || fileSplit[1].Equals("avi"))
                 {
                     Console.WriteLine("can not be formatted as already contains formatting");
                 }
                 else
                 {
-                    var newFileName = path + "\\" + fileSplit[0] + " " + fileSplit[1] + " (" + fileSplit[2] + ")" + file.Extension;
-                
+
+                    //json parsing of movie data
+                    var json = "";
+                    using (var wc = new WebClient())
+                    {
+                       // var name = "12 feet deep";
+                        json = wc.DownloadString("http://www.theimdbapi.org/api/find/movie?title=" + constructedNameFromParts);
+                    }
+                    
+                    var deserializedProduct = JsonConvert.DeserializeObject<List<RootObject>>(json);//List<RootObject>
+
+                    var title = deserializedProduct[0].title;
+                    var year = deserializedProduct[0].year;
+
+                    Console.WriteLine(deserializedProduct[0].title);
+                    Console.WriteLine(deserializedProduct[0].year);
+
+
+//                    //continue 
+//                    var newFileName = path + "\\" + fileSplit[0] + " " + fileSplit[1] + " (" + fileSplit[2] + ")" + file.Extension;
+
+                    //formatting new file name
+                    var newFileName = path + "\\" + title + " (" + year + ")" + file.Extension;
+                    //rename the file from original to new
                     File.Move(file.FullName,newFileName);
                 }
+//
+
             }
 
-            //json
-            var json = "";
-            using (var wc = new WebClient())
-            {
-                var name = "12 feet deep";
-                json = wc.DownloadString("http://www.theimdbapi.org/api/find/movie?title="+ name);
-            }
-
-            var deserializedProduct = JsonConvert.DeserializeObject<List<RootObject>>(json);//List<RootObject>
- 
-            Console.WriteLine(deserializedProduct[0].title);
-            Console.WriteLine(deserializedProduct[0].year);
+            
 
         }
     }
