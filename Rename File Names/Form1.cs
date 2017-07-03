@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Windows.Forms;
 using System.Web;
+using Newtonsoft.Json;
 
 
 namespace Rename_File_Names
@@ -32,10 +35,31 @@ namespace Rename_File_Names
             foreach (var file in fileInfo)
             {
                 var fileSplit = file.FullName.Split('.');
-                var newFileName = fileSplit[0] + " " + fileSplit[1] + " (" + fileSplit[2] + ")" + file.Extension;
+                if (fileSplit[1].Equals("mp4") || fileSplit[1].Equals("avi"))
+                {
+                    Console.WriteLine("can not be formatted as already contains formatting");
+                }
+                else
+                {
+                    var newFileName = path + "\\" + fileSplit[0] + " " + fileSplit[1] + " (" + fileSplit[2] + ")" + file.Extension;
                 
-                File.Move(file.FullName,newFileName);
+                    File.Move(file.FullName,newFileName);
+                }
             }
+
+            //json
+            var json = "";
+            using (var wc = new WebClient())
+            {
+                var name = "12 feet deep";
+                json = wc.DownloadString("http://www.theimdbapi.org/api/find/movie?title="+ name);
+            }
+
+            var deserializedProduct = JsonConvert.DeserializeObject<List<RootObject>>(json);//List<RootObject>
+ 
+            Console.WriteLine(deserializedProduct[0].title);
+            Console.WriteLine(deserializedProduct[0].year);
+
         }
     }
 }
