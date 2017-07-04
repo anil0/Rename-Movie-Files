@@ -52,6 +52,11 @@ namespace Rename_File_Names
 
             var deserializedProduct = JsonConvert.DeserializeObject<List<RootObject>>(json);//List<RootObject>
 
+            if(deserializedProduct == null)
+            {
+                return null;
+            }
+
             var title = deserializedProduct[0].title;
             var year = deserializedProduct[0].year;
 
@@ -129,30 +134,31 @@ namespace Rename_File_Names
 
             var constructedNameFromParts = "";
 
-            foreach (var s in fileSplitByName)
-            {
-                //if year then stop and grab only name
-
-                if (Regex.IsMatch(s, "^(19|20)[0-9][0-9]"))
-                {
-                    break;
-                }
-
-                constructedNameFromParts += s + " ";
-            }
-
-            if (fileSplit[1].Equals("mp4") || fileSplit[1].Equals("avi"))
+            if (Regex.IsMatch(file.Name, "(\\((19|20)[0-9][0-9]\\))")) //Already Formatted //HAS A VALID YEAR = ^(19|20)[0-9][0-9] 
             {
                 Console.WriteLine("Error: can not be formatted as already contains formatting");
             }
             else
             {
-                var movieInformation = GetMovieInformation(constructedNameFromParts);
+                //contains dot formatting in name
+                if (fileSplitByName.Length > 2)
+                {
+                    //contains dot formatting in name
+                    Console.WriteLine("Contains Dot Formatting");
 
-                //formatting new file name
-                var newFileName = path + "\\" + movieInformation.Title + " (" + movieInformation.Year + ")" + file.Extension;
-                //rename the file from original to new
-                File.Move(file.FullName, newFileName);
+                    SetupRenameFilePath(fileSplitByName, constructedNameFromParts, path, file);
+                    
+                }
+                //contains space formatting
+                else
+                {
+                    var fileSplitBySpace = file.Name.Split(' ');
+
+                    Console.WriteLine("contains space formatting");
+
+                    SetupRenameFilePath(fileSplitBySpace,constructedNameFromParts,path,file);
+
+                }
             }
         }
 
@@ -187,6 +193,35 @@ namespace Rename_File_Names
 
             return movieInformation;
 
+        }
+
+        public void SetupRenameFilePath(string[] fileSplitBySpace, string constructedNameFromParts, string path, FileInfo file)
+        {
+            foreach (var s in fileSplitBySpace)
+            {
+                //if year then stop and grab only name
+                if (Regex.IsMatch(s, "^(19|20)[0-9][0-9]")) //HAS A VALID YEAR = ^(19|20)[0-9][0-9] 
+                {
+                    break;
+                }
+
+                constructedNameFromParts += s + " ";
+            }
+
+            var movieInformation = GetMovieInformation(constructedNameFromParts);
+
+            if (movieInformation != null)
+            {
+                //formatting new file name
+                var newFileName = path + "\\" + movieInformation.Title + " (" + movieInformation.Year + ")" +
+                                  file.Extension;
+                //rename the file from original to new
+                File.Move(file.FullName, newFileName);
+            }
+            else
+            {
+                Console.WriteLine("ERROR: No such movie exists to get the information for: " + constructedNameFromParts);
+            }
         }
 
     }//end class
