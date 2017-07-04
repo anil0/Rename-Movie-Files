@@ -63,6 +63,31 @@ namespace Rename_File_Names
             return new MovieInformation(){Title = title, Year = year};
         }
 
+        public MovieInformation GetMovieInformationWhatIsMyMovieApi(string constructedNameFromParts)
+        {
+            
+
+            //json parsing of movie data
+            var json = "";
+            using (var wc = new WebClient())
+            {
+                // var name = "12 feet deep";
+                json = wc.DownloadString("https://api.whatismymovie.com/1.0/?api_key=jPvyBrw6iWCD2sgU&text=" + constructedNameFromParts);
+            }
+
+            var deserializedProduct = JsonConvert.DeserializeObject<List<RootObject>>(json);//List<RootObject>
+
+            if (deserializedProduct == null)
+            {
+                return null;
+            }
+
+            var title = deserializedProduct[0].title;
+            var year = deserializedProduct[0].year;
+
+            return new MovieInformation() { Title = title, Year = year };
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             var browser = new FolderBrowserDialog();
@@ -221,6 +246,15 @@ namespace Rename_File_Names
             else
             {
                 Console.WriteLine("ERROR: No such movie exists to get the information for: " + constructedNameFromParts);
+                Console.WriteLine("Retrying From Another Source...");
+                var movieInfo = GetMovieInformationWhatIsMyMovieApi(constructedNameFromParts);
+
+                //formatting new file name
+                var newFileName = path + "\\" + movieInfo.Title + " (" + movieInfo.Year + ")" +
+                                  file.Extension;
+                //rename the file from original to new
+                File.Move(file.FullName, newFileName);
+
             }
         }
 
