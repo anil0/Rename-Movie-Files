@@ -75,13 +75,38 @@ namespace Rename_File_Names
             //show all paths of those folders
             foreach (var directory in directories)
             {
+                string originalDirectory = directory;
                 Console.WriteLine("Directory ---");
                 Console.WriteLine(directory);
+
                 //do name changing for the folder here
+                var movieInformation = RenameFolder(directory);
+
+                var indexOfLastBackSlash = directory.LastIndexOf('\\');
+                var folderPath = directory.Substring(0, indexOfLastBackSlash);
+                var folderName = directory.Substring(indexOfLastBackSlash + 1);
+                var renamedDirectory = folderPath + "\\" + movieInformation.Title + " (" + movieInformation.Year + ")";
+
+                ///////////////////////////////////////////////////////////////
+                //does the current folder contain another folder or more than one?
+                var subDirectories = Directory.GetDirectories(renamedDirectory);
+
+                if (subDirectories.Length > 0)
+                {
+                    Console.WriteLine("Yes contains another folder! -----");
+                    //list all the inner folders
+                    foreach (var subDirectory in subDirectories)
+                    {
+                        Console.WriteLine(subDirectory);//inner folder path
+                        //send to rename folder and go into this directory and rename file from folder name
+                    }
+                    
+                }
+                ////////////////////////////////////////////////////////
 
                 //access the files of that folder
                 //lets you create/move and enumerate files from a path
-                var directoryInfo = new DirectoryInfo(directory);
+                var directoryInfo = new DirectoryInfo(renamedDirectory);
                 //gets list of the actual files in that folder
                 var fileInfo = directoryInfo.GetFiles();
 
@@ -129,6 +154,39 @@ namespace Rename_File_Names
                 //rename the file from original to new
                 File.Move(file.FullName, newFileName);
             }
+        }
+
+        public MovieInformation RenameFolder(string path)
+        {
+            var indexOfLastBackSlash = path.LastIndexOf('\\');
+            var folderPath = path.Substring(0, indexOfLastBackSlash);
+            var folderName = path.Substring(indexOfLastBackSlash + 1);
+            var fileSplitByName = folderName.Split('.');
+
+            var constructedNameFromParts = "";
+
+            foreach (var s in fileSplitByName)
+            {
+                //if year then stop and grab only name
+
+                if (Regex.IsMatch(s, "^(19|20)[0-9][0-9]"))
+                {
+                    break;
+                }
+
+                constructedNameFromParts += s + " ";
+            }
+
+            var movieInformation = GetMovieInformation(constructedNameFromParts);
+
+            //formatting new file name
+            var newFolderName = folderPath + "\\" + movieInformation.Title + " (" + movieInformation.Year + ")";
+
+            //rename the file from original to new
+            Directory.Move(path, newFolderName);
+
+            return movieInformation;
+
         }
 
     }//end class
