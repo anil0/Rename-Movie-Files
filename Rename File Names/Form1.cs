@@ -222,11 +222,21 @@ namespace Rename_File_Names
 
         public void SetupRenameFilePath(string[] fileSplitBySpace, string constructedNameFromParts, string path, FileInfo file)
         {
+            int i = 0;
             foreach (var s in fileSplitBySpace)
             {
+                i++;
                 //if year then stop and grab only name
                 if (Regex.IsMatch(s, "^(19|20)[0-9][0-9]")) //HAS A VALID YEAR = ^(19|20)[0-9][0-9] 
                 {
+                    if (i < 2) //starts with a year
+                    {
+                        foreach (var s1 in fileSplitBySpace)
+                        {
+                            constructedNameFromParts += s1 + " ";
+                        }
+                    }
+
                     break;
                 }
 
